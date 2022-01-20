@@ -39,11 +39,7 @@ export AWS_SESSION_TOKEN="zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
 3. Run the Docker image
 
 ```shell
-docker run --rm -it \
-    -p 8088:8088 -p 8188:8188 -p 9999:9999 \
-    -e AWS_REGION=us-east-1 -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
-    -e S3_LOG_URI -e JOB_RUN_ID -e APPLICATION_ID \
-    emr/tez-ui
+ ./start-ui.sh <S3-Bucket> <ApplicationId> <jobid>
 ```
 
 4. Access the Tez UI via http://localhost:8088
