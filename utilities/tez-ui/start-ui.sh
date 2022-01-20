@@ -2,7 +2,7 @@ export S3_BUCKET=$1
 export APPLICATION_ID=$2
 export JOB_RUN_ID=$3
 
-export S3_LOG_URI=s3://${S3_BUCKET}/logs
+export S3_LOG_URI=s3://${S3_BUCKET}/hive-logs
 
 export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
