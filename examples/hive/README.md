@@ -25,8 +25,8 @@ echo ${ROLE_ARN}
 - First, make sure the `extreme_weather.sql` and `create_table.sql` scripts are uploaded to an S3 bucket in the `us-east-1` region.
 
 ```shell
-aws s3 cp ~/environment/emr-serverless-samples/examples/hive/extreme_weather.sql s3://${S3_BUCKET}/code/hive/
-aws s3 cp ~/environment/emr-serverless-samples/examples/hive/create_table.sql s3://${S3_BUCKET}/code/hive/
+aws s3 cp $SOURCE_ROOT/examples/hive/extreme_weather.sql s3://${S3_BUCKET}/code/hive/
+aws s3 cp $SOURCE_ROOT/examples/hive/create_table.sql s3://${S3_BUCKET}/code/hive/
 ```
 
 - Now, let's create and start an Application on EMR Serverless. Applications are where you submit jobs and are associated with a specific open source framework and release version.
@@ -172,7 +172,7 @@ export AWS_ACCESS_KEY_ID=AKIAaaaa
 export AWS_SECRET_ACCESS_KEY=bbbb
 export AWS_SESSION_TOKEN=yyyy
 
-cd ~/environment/emr-serverless-samples/utilities/tez-ui
+cd $SOURCE_ROOT/utilities/tez-ui
 ./start-ui.sh ${S3_BUCKET} ${APPLICATION_ID} ${JOB_RUN_ID}
 ```
 
@@ -218,7 +218,7 @@ export AWS_SESSION_TOKEN=yyyy
 - Start UI
 
 ```shell
-cd ~/environment/emr-serverless-samples/utilities/tez-ui
+cd $SOURCE_ROOT/utilities/tez-ui
 ./start-ui.sh ${S3_BUCKET} ${APPLICATION_ID} ${JOB_RUN_ID}
 
 ```

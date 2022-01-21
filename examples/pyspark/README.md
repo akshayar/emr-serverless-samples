@@ -161,7 +161,7 @@ export AWS_ACCESS_KEY_ID=AKIAaaaa
 export AWS_SECRET_ACCESS_KEY=bbbb
 export AWS_SESSION_TOKEN=yyyy
 
-cd ~/environment/emr-serverless-samples/utilities/spark-ui
+cd $SOURCE_ROOT/utilities/spark-ui
 
 ./start-ui.sh ${S3_BUCKET} ${APPLICATION_ID} ${JOB_RUN_ID}
 
@@ -176,7 +176,7 @@ config("hive.metastore.client.factory.class",
 
 - First, make sure the `copy-data.py` script is uploaded to an S3 bucket in the `us-east-1 region.
 ```shell
-aws s3 cp ~/environment/emr-serverless-samples/examples/pyspark/copy-data.py s3://${S3_BUCKET}/code/pyspark/
+aws s3 cp $SOURCE_ROOT/examples/pyspark/copy-data.py s3://${S3_BUCKET}/code/pyspark/
 ```
 
 
@@ -231,7 +231,7 @@ aws s3 cp  s3://${S3_BUCKET}/logs/applications/${APPLICATION_ID}/jobs/${JOB_RUN_
 - We can also launch Spark History Server to monitor job.
 
 ```shell
-cd ~/environment/emr-serverless-samples/utilities/spark-ui
+cd $SOURCE_ROOT/utilities/spark-ui
 
 ./start-ui.sh ${S3_BUCKET} ${APPLICATION_ID} ${JOB_RUN_ID}
 ```
@@ -274,7 +274,7 @@ export AWS_SESSION_TOKEN=yyyy
 - Start UI
 
 ```shell
-cd ~/environment/emr-serverless-samples/utilities/spark-ui
+cd $SOURCE_ROOT/utilities/spark-ui
 
 ./start-ui.sh ${S3_BUCKET} ${APPLICATION_ID} ${JOB_RUN_ID}
 

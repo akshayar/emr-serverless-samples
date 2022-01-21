@@ -17,7 +17,7 @@ aws ecr get-login-password --region us-east-1 | docker login --username AWS --pa
 ```
 3. Build the image
 ```shell
-cd ~/environment/emr-serverless-samples/utilities/spark-ui
+cd $SOURCE_ROOT/utilities/spark-ui
 docker build -t emr/spark-ui .
 ```
 

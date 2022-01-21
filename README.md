@@ -26,7 +26,7 @@ aws emr-serverless list-applications
 ```shell
 export S3_BUCKET=<>
 aws s3 mb s3://${S3_BUCKET} --region us-east-1
-
+export SOURCE_ROOT=<path-to-root-of source ~/environment/emr-serverless-samples>
 ```
 
 4. Create an EMR Serverless execution role (replacing `BUCKET-NAME` with the one you created above)

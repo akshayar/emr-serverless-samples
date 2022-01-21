@@ -17,7 +17,7 @@ aws ecr get-login-password --region us-east-1 | docker login --username AWS --pa
 ```
 3. Build the image
 ```shell
-cd ~/environment/emr-serverless-samples/utilities/tez-ui
+cd $SOURCE_ROOT/utilities/tez-ui
 docker build -t emr/tez-ui .
 ```
 
