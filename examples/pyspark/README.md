@@ -135,7 +135,7 @@ aws s3 ls --recursive s3://${S3_BUCKET}/output
 
 ```shell
 --- Docker and maven should be installed
-cd ../utilities/spark-ui
+cd ~/environment/emr-serverless-samples/utilities/spark-ui
 chmod +x *.sh
 ./build.sh 
 export AWS_ACCESS_KEY_ID=AKIAaaaa
