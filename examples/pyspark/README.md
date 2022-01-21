@@ -129,6 +129,8 @@ cat ${JOB_RUN_ID}/stdout.gz | gunzip
  
 cat ${JOB_RUN_ID}/stderr.gz | gunzip 
 
+aws s3 ls --recursive s3://${S3_BUCKET}/output
+
 ```
 
 ```shell
