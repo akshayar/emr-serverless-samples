@@ -87,6 +87,8 @@ Once your application is in `CREATED` state, you can go ahead and start it.
 ```shell
 aws emr-serverless start-application \
     --application-id $APPLICATION_ID
+    
+aws emr-serverless get-application     --application-id $APPLICATION_ID --query application.state --output text
 ```
 
 Once your application is in `STARTED` state, you can submit jobs.
