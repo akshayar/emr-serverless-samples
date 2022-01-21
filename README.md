@@ -17,6 +17,13 @@ _These demos assume you are using an Administrator-level role in your AWS accoun
 ```shell
 export S3_BUCKET=<>
 aws s3 mb s3://${S3_BUCKET} --region us-east-1
+
+aws s3 cp s3://elasticmapreduce/emr-serverless-preview/artifacts/latest/dev/cli/service.json ./service.json
+aws configure add-model --service-model file://service.json
+
+aws configure set region us-east-1
+aws emr-serverless list-applications
+
 ```
 
 3. Create an EMR Serverless execution role (replacing `BUCKET-NAME` with the one you created above)
