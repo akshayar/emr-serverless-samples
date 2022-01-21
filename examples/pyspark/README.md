@@ -15,6 +15,7 @@ _You should have already completed the pre-requisites in this repo's [README](/R
 ```shell
 export S3_BUCKET=<YOUR_BUCKET_NAME>
 export ROLE_ARN=`aws iam get-role --role-name emr-serverless-job-role --query Role.Arn --output text`
+echo ${ROLE_ARN}
 ```
 
 
