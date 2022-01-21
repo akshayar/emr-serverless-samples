@@ -115,7 +115,8 @@ JOB_RUN_ID=`aws emr-serverless start-job-run \
            }
         }
     }' --query jobRunId --output text`
-    
+
+echo $JOB_RUN_ID
 aws emr-serverless list-job-runs --application-id $APPLICATION_ID
 
 aws emr-serverless get-job-run --application-id $APPLICATION_ID --job-run-id ${JOB_RUN_ID}
