@@ -61,7 +61,7 @@ aws emr-serverless create-application \
     }'
 ```
 
-This will return information about your application.
+- This will return information about your application.
 
 ```json
 {
@@ -71,7 +71,7 @@ This will return information about your application.
 }
 ```
 
-We'll set an `APPLICATION_ID` environment variable to reuse later.
+- We'll set an `APPLICATION_ID` environment variable to reuse later.
 
 ```shell
 aws emr-serverless list-applications
@@ -92,7 +92,7 @@ aws emr-serverless get-application \
    
 ```
 
-Once your application is in `CREATED` state, you can go ahead and start it.
+- Once your application is in `CREATED` state, you can go ahead and start it.
 
 ```shell
 aws emr-serverless start-application \
@@ -109,7 +109,7 @@ With [pre-initialized capacity](https://docs.aws.amazon.com/emr/latest/EMR-Serve
 
 ## Run your job
 
-Now that you've created your application, you can submit jobs to it at any time.
+- Now that you've created your application, you can submit jobs to it at any time.
 
 ```shell
 JOB_RUN_ID=`aws emr-serverless start-job-run \
@@ -143,7 +143,7 @@ JOB_RUN_ID=`aws emr-serverless start-job-run \
  echo $JOB_RUN_ID
 
 ```
-The job should start within a few seconds since we're making use of pre-initialized capacity.
+- The job should start within a few seconds since we're making use of pre-initialized capacity.
 
 ```shell
    
@@ -154,7 +154,7 @@ The job should start within a few seconds since we're making use of pre-initiali
  aws emr-serverless get-job-run --application-id $APPLICATION_ID --job-run-id ${JOB_RUN_ID} --query jobRun.state --output text
  
 ```
-We can also look at our logs while the job is running.
+- We can also look at our logs while the job is running.
 
 ```shell
 aws s3 ls  --recursive s3://${S3_BUCKET}/logs/applications/$APPLICATION_ID/jobs/$JOB_RUN_ID/
@@ -164,7 +164,7 @@ aws s3 cp --recursive s3://${S3_BUCKET}/hive-logs/applications/$APPLICATION_ID/j
 aws s3 cp --recursive s3://${S3_BUCKET}/hive-logs/applications/$APPLICATION_ID/jobs/${JOB_RUN_ID}/HIVE_DRIVER/stderr.gz  - | gunzip
 
 ```
-
+- We can also Tez UI to monitor job.
 ```shell
 cd ~/environment/emr-serverless-samples/utilities/tez-ui
 
@@ -175,7 +175,7 @@ export AWS_SESSION_TOKEN=yyyy
 ```
 
 
-View the output of job
+- View the output of job
 ```shell
 aws s3 ls --recursive s3://${S3_BUCKET}/output/noaa_gsod_pds
 aws s3 ls --recursive s3://${S3_BUCKET}/output/noaa_gsod_pds_aggregate

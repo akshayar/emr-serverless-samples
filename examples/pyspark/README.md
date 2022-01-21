@@ -54,7 +54,7 @@ aws emr-serverless create-application \
 
 ```
 
-This will return information about your application. In this case, we've created an application that can handle 2 simultaneous Spark apps with an initial set of 10 executors, each with 4vCPU and 4GB of memory, that can scale up to 200vCPU or 50 executors.
+- This will return information about your application. In this case, we've created an application that can handle 2 simultaneous Spark apps with an initial set of 10 executors, each with 4vCPU and 4GB of memory, that can scale up to 200vCPU or 50 executors.
 
 ```json
 {
@@ -64,7 +64,7 @@ This will return information about your application. In this case, we've created
 }
 ```
 
-We'll set an `APPLICATION_ID` environment variable to reuse later.
+- We'll set an `APPLICATION_ID` environment variable to reuse later.
 
 ```shell
 aws emr-serverless list-applications
@@ -84,7 +84,7 @@ aws emr-serverless get-application \
 aws emr-serverless get-application     --application-id $APPLICATION_ID --query application.state --output text
 ```
 
-Once your application is in `CREATED` state, you can go ahead and start it.
+- Once your application is in `CREATED` state, you can go ahead and start it.
 
 ```shell
 aws emr-serverless start-application \
@@ -93,12 +93,12 @@ aws emr-serverless start-application \
 aws emr-serverless get-application     --application-id $APPLICATION_ID --query application.state --output text
 ```
 
-Once your application is in `STARTED` state, you can submit jobs.
+- Once your application is in `STARTED` state, you can submit jobs.
 
 With [pre-initialized capacity](https://docs.aws.amazon.com/emr/latest/EMR-Serverless-UserGuide/application-capacity-api.html), you can define a minimum amount of resources that EMR Serverless keeps ready to respond to interactive queries. EMR Serverless will scale your application up as necessary to respond to workloads, but return to the pre-initialized capacity when there is no activity. You can start or stop an application to effectively pause your application so that you are not billed for resources you're not using. If you don't need second-level response times in your workloads, you can use the default capacity and EMR Serverless will decomission all resources when a job is complete and scale back up as more workloads come in.
 
 ## Run wordcount Job
-
+- Submit the job
 ```shell
 JOB_RUN_ID=`aws emr-serverless start-job-run \
     --application-id ${APPLICATION_ID} \
@@ -121,6 +121,7 @@ JOB_RUN_ID=`aws emr-serverless start-job-run \
 echo $JOB_RUN_ID
 
 ```
+- View the job and it's status.
 ```shell
 aws emr-serverless list-job-runs --application-id $APPLICATION_ID
 
@@ -129,14 +130,19 @@ aws emr-serverless get-job-run --application-id $APPLICATION_ID --job-run-id ${J
 aws emr-serverless get-job-run --application-id $APPLICATION_ID --job-run-id ${JOB_RUN_ID} --query jobRun.state --output text
 
 ```
+- We can monitor Job logs
 ```shell
 aws s3 ls  --recursive s3://${S3_BUCKET}/logs/applications/$APPLICATION_ID/jobs/$JOB_RUN_ID/
 
+```
+- We can download and view job logs
+```shell
 aws s3 cp  s3://${S3_BUCKET}/logs/applications/${APPLICATION_ID}/jobs/${JOB_RUN_ID}/SPARK_DRIVER/stdout.gz - | gunzip
 aws s3 cp  s3://${S3_BUCKET}/logs/applications/${APPLICATION_ID}/jobs/${JOB_RUN_ID}/SPARK_DRIVER/stderr.gz - | gunzip
 
 
 ```
+- View the output of job
 ```shell
 aws s3 ls --recursive s3://${S3_BUCKET}/output
 mkdir -p  temp/output/
@@ -144,7 +150,7 @@ aws s3 cp --recursive s3://${S3_BUCKET}/output temp/output/
 
 cat `ls temp/output/* | xargs`
 ```
-
+- We can also launch Spark History Server to monitor job.
 ```shell
 cd ~/environment/emr-serverless-samples/utilities/spark-ui
 export AWS_ACCESS_KEY_ID=AKIAaaaa
@@ -197,7 +203,7 @@ JOB_RUN_ID=`aws emr-serverless start-job-run \
 
 echo $JOB_RUN_ID
 ```
-The job should start within a few seconds since we're making use of pre-initialized capacity.
+- The job should start within a few seconds since we're making use of pre-initialized capacity.
 ```shell
 aws emr-serverless list-job-runs --application-id $APPLICATION_ID
 
@@ -208,7 +214,7 @@ aws emr-serverless get-job-run --application-id $APPLICATION_ID \
    --job-run-id ${JOB_RUN_ID} --query jobRun.state --output text
 
 ```
-We can also look at our logs while the job is running.
+- We can also look at our logs while the job is running.
 ```shell
 aws s3 ls  --recursive s3://${S3_BUCKET}/logs/applications/$APPLICATION_ID/jobs/$JOB_RUN_ID/
 
@@ -216,7 +222,7 @@ aws s3 cp  s3://${S3_BUCKET}/logs/applications/${APPLICATION_ID}/jobs/${JOB_RUN_
 aws s3 cp  s3://${S3_BUCKET}/logs/applications/${APPLICATION_ID}/jobs/${JOB_RUN_ID}/SPARK_DRIVER/stderr.gz - | gunzip
 
 ```
-We can also Spark History Server to monitor job.
+- We can also launch Spark History Server to monitor job.
 
 ```shell
 cd ~/environment/emr-serverless-samples/utilities/spark-ui
@@ -224,7 +230,7 @@ cd ~/environment/emr-serverless-samples/utilities/spark-ui
 ./start-ui.sh ${S3_BUCKET} ${APPLICATION_ID} ${JOB_RUN_ID}
 ```
 
-View the output of job
+- View the output of job
 ```shell
 aws s3 ls --recursive s3://${S3_BUCKET}/output/noaa_gsod_pds
 aws s3 ls --recursive s3://${S3_BUCKET}/output/noaa_gsod_pds_aggregate
@@ -233,7 +239,7 @@ aws s3 ls --recursive s3://${S3_BUCKET}/output/noaa_gsod_pds_aggregate
 
 ## Clean up
 
-When you're all done, make sure to call `stop-application` to decommission your capacity and `delete-application` if you're all done.
+- When you're all done, make sure to call `stop-application` to decommission your capacity and `delete-application` if you're all done.
 
 
 ```shell
@@ -241,7 +247,7 @@ aws emr-serverless stop-application \
     --application-id $APPLICATION_ID
 ```
 
-
+- Delete application
 ```shell
 aws emr-serverless delete-application \
     --application-id $APPLICATION_ID
