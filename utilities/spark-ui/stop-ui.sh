@@ -1,0 +1,1 @@
+docker stop  emr-serverless-spark-ui

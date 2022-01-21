@@ -12,21 +12,24 @@ _These demos assume you are using an Administrator-level role in your AWS accoun
 
 1. **Amazon EMR Serverless is currently in preview.** Please follow the sign-up steps at https://pages.awscloud.com/EMR-Serverless-Preview.html to request access.
 
-2. Create an Amazon S3 bucket in the us-east-1 region
-
+2. Setup CLI Access for Amazon EMR Serverless
 ```shell
-export S3_BUCKET=<>
-aws s3 mb s3://${S3_BUCKET} --region us-east-1
-
 aws s3 cp s3://elasticmapreduce/emr-serverless-preview/artifacts/latest/dev/cli/service.json ./service.json
 aws configure add-model --service-model file://service.json
 
 aws configure set region us-east-1
 aws emr-serverless list-applications
+```
+
+3. Create an Amazon S3 bucket in the us-east-1 region
+
+```shell
+export S3_BUCKET=<>
+aws s3 mb s3://${S3_BUCKET} --region us-east-1
 
 ```
 
-3. Create an EMR Serverless execution role (replacing `BUCKET-NAME` with the one you created above)
+4. Create an EMR Serverless execution role (replacing `BUCKET-NAME` with the one you created above)
 
 This role provides both S3 access for specific buckets as well as full read and write access to the Glue Data Catalog.
 
@@ -43,7 +46,8 @@ aws iam create-role --role-name emr-serverless-job-role --assume-role-policy-doc
       }
     ]
   }'
-
+```
+```shell
 aws iam put-role-policy --role-name emr-serverless-job-role --policy-name S3Access --policy-document '{
     "Version": "2012-10-17",
     "Statement": [
@@ -106,6 +110,10 @@ aws iam put-role-policy --role-name emr-serverless-job-role --policy-name GlueAc
   }'
 ```
   
+5. Optional - Refer [Spark UI](/utilities/spark-ui/) to build Spark UI Package, if you want to use Spark History Server to monitor Spark Job. 
+
+6. Optional - Refer [Tez UI](/utilities/tez-ui/) , to build Tez UI Package, if you want to use Tez UI to monitor Hive Job.
+
 
 ## Examples
 

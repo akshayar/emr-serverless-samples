@@ -1,0 +1,1 @@
+docker stop  emr-tez-ui

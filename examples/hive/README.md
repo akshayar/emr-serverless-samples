@@ -17,13 +17,14 @@ _You should have already completed the pre-requisites in this repo's [README](/R
 ```shell
 export S3_BUCKET=<YOUR_BUCKET_NAME>
 export ROLE_ARN=`aws iam get-role --role-name emr-serverless-job-role --query Role.Arn --output text`
+echo ${ROLE_ARN}
 ```
 
 - First, make sure the `extreme_weather.sql` and `create_table.sql` scripts are uploaded to an S3 bucket in the `us-east-1` region.
 
 ```shell
-aws s3 cp extreme_weather.sql s3://${S3_BUCKET}/code/hive/
-aws s3 cp create_table.sql s3://${S3_BUCKET}/code/hive/
+aws s3 cp ~/environment/emr-serverless-samples/examples/hive/extreme_weather.sql s3://${S3_BUCKET}/code/hive/
+aws s3 cp ~/environment/emr-serverless-samples/examples/hive/create_table.sql s3://${S3_BUCKET}/code/hive/
 ```
 
 - Now, let's create and start an Application on EMR Serverless. Applications are where you submit jobs and are associated with a specific open source framework and release version.
@@ -77,14 +78,18 @@ aws emr-serverless list-applications
 
 export  APPLICATION_ID=`aws emr-serverless list-applications --query applications[0].id --output text`
 
---export APPLICATION_ID=00et0f0b79s06o09
+echo $APPLICATION_ID
 ```
 
 - Get the state of your application
 
 ```shell
 aws emr-serverless get-application \
-    --application-id $APPLICATION_ID
+    --application-id ${APPLICATION_ID}
+
+aws emr-serverless get-application \   
+   --application-id $APPLICATION_ID --query application.state --output text
+   
 ```
 
 Once your application is in `CREATED` state, you can go ahead and start it.
@@ -92,6 +97,9 @@ Once your application is in `CREATED` state, you can go ahead and start it.
 ```shell
 aws emr-serverless start-application \
     --application-id $APPLICATION_ID
+    
+aws emr-serverless get-application   \
+   --application-id $APPLICATION_ID --query application.state --output text
 ```
 
 Once your application is in `STARTED` state, you can submit jobs.
@@ -132,23 +140,34 @@ JOB_RUN_ID=`aws emr-serverless start-job-run \
             }
         }
     }' --query jobRunId --output text`
-    
+ echo $JOB_RUN_ID
+
+```
+The job should start within a few seconds since we're making use of pre-initialized capacity.
+
+```shell
+   
  aws emr-serverless list-job-runs --application-id $APPLICATION_ID
  
  aws emr-serverless get-job-run --application-id $APPLICATION_ID --job-run-id ${JOB_RUN_ID}
 
  aws emr-serverless get-job-run --application-id $APPLICATION_ID --job-run-id ${JOB_RUN_ID} --query jobRun.state --output text
  
- 
- aws s3 cp --recursive s3://akshaya-emr-workshop/hive-logs/applications/$APPLICATION_ID/jobs/${JOB_RUN_ID}/HIVE_DRIVER/ ${JOB_RUN_ID}
+```
+We can also look at our logs while the job is running.
 
- cat ${JOB_RUN_ID}/hive.log.gz | gunzip
- cat ${JOB_RUN_ID}/stderr.gz | gunzip
+```shell
+aws s3 ls  --recursive s3://${S3_BUCKET}/logs/applications/$APPLICATION_ID/jobs/$JOB_RUN_ID/
+
+aws s3 cp --recursive s3://${S3_BUCKET}/hive-logs/applications/$APPLICATION_ID/jobs/${JOB_RUN_ID}/HIVE_DRIVER/stdout.gz  - | gunzip
+
+aws s3 cp --recursive s3://${S3_BUCKET}/hive-logs/applications/$APPLICATION_ID/jobs/${JOB_RUN_ID}/HIVE_DRIVER/stderr.gz  - | gunzip
+
 ```
 
 ```shell
-cd ../utilities/tez-ui
-chmod +x *.sh
+cd ~/environment/emr-serverless-samples/utilities/tez-ui
+
 export AWS_ACCESS_KEY_ID=AKIAaaaa
 export AWS_SECRET_ACCESS_KEY=bbbb
 export AWS_SESSION_TOKEN=yyyy
@@ -156,19 +175,13 @@ export AWS_SESSION_TOKEN=yyyy
 ```
 
 
-The job should start within a few seconds since we're making use of pre-initialized capacity.
-
-We can also look at our logs while the job is running.
-
+View the output of job
 ```shell
-aws s3 ls s3://${S3_BUCKET}/hive-logs/applications/$APPLICATION_ID/jobs/$JOB_RUN_ID/
+aws s3 ls --recursive s3://${S3_BUCKET}/output/noaa_gsod_pds
+aws s3 ls --recursive s3://${S3_BUCKET}/output/noaa_gsod_pds_aggregate
+
 ```
 
-Or copy the stdout of the job.
-
-```shell
-aws s3 cp s3://${S3_BUCKET}/hive-logs/applications/$APPLICATION_ID/jobs/$JOB_RUN_ID/HIVE_DRIVER/stdout.gz - | gunzip
-```
 
 ## Clean up
 
@@ -193,22 +206,19 @@ aws emr-serverless delete-application \
 - Get credentials and set S3_LOG_URI
 
 ```shell
+
 export AWS_ACCESS_KEY_ID=AKIAaaaa
 export AWS_SECRET_ACCESS_KEY=bbbb
 export AWS_SESSION_TOKEN=yyyy
 
-export S3_LOG_URI=s3://${S3_BUCKET}/hive-logs
 ```
 
-- Fire up Docker
+- Start UI
 
 ```shell
-docker run --rm -d \
-    --name emr-serverless-tez-ui \
-    -p 8088:8088 -p 8188:8188 -p 9999:9999 \
-    -e AWS_REGION -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
-    -e S3_LOG_URI -e JOB_RUN_ID -e APPLICATION_ID \
-    ghcr.io/aws-samples/emr-serverless-tez-ui:latest
+cd ~/environment/emr-serverless-samples/utilities/tez-ui
+./start-ui.sh ${S3_BUCKET} ${APPLICATION_ID} ${JOB_RUN_ID}
+
 ```
 
 - Open the Tez UI at http://localhost:9999/tez-ui/
@@ -216,5 +226,6 @@ docker run --rm -d \
 - When you're done, stop the Docker image
 
 ```shell
-docker stop emr-serverless-tez-ui
+./stop-ui.sh
+
 ```

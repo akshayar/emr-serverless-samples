@@ -80,6 +80,8 @@ echo $APPLICATION_ID
 ```shell
 aws emr-serverless get-application \
     --application-id ${APPLICATION_ID}
+
+aws emr-serverless get-application     --application-id $APPLICATION_ID --query application.state --output text
 ```
 
 Once your application is in `CREATED` state, you can go ahead and start it.
@@ -117,24 +119,33 @@ JOB_RUN_ID=`aws emr-serverless start-job-run \
     }' --query jobRunId --output text`
 
 echo $JOB_RUN_ID
+
+```
+```shell
 aws emr-serverless list-job-runs --application-id $APPLICATION_ID
 
 aws emr-serverless get-job-run --application-id $APPLICATION_ID --job-run-id ${JOB_RUN_ID}
 
 aws emr-serverless get-job-run --application-id $APPLICATION_ID --job-run-id ${JOB_RUN_ID} --query jobRun.state --output text
 
-aws s3 cp --recursive s3://${S3_BUCKET}/logs/applications/${APPLICATION_ID}/jobs/${JOB_RUN_ID}/SPARK_DRIVER/ ${JOB_RUN_ID}
+```
+```shell
+aws s3 ls  --recursive s3://${S3_BUCKET}/logs/applications/$APPLICATION_ID/jobs/$JOB_RUN_ID/
 
-cat ${JOB_RUN_ID}/stdout.gz | gunzip
- 
-cat ${JOB_RUN_ID}/stderr.gz | gunzip 
+aws s3 cp  s3://${S3_BUCKET}/logs/applications/${APPLICATION_ID}/jobs/${JOB_RUN_ID}/SPARK_DRIVER/stdout.gz - | gunzip
+aws s3 cp  s3://${S3_BUCKET}/logs/applications/${APPLICATION_ID}/jobs/${JOB_RUN_ID}/SPARK_DRIVER/stderr.gz - | gunzip
 
+
+```
+```shell
 aws s3 ls --recursive s3://${S3_BUCKET}/output
+mkdir -p  temp/output/
+aws s3 cp --recursive s3://${S3_BUCKET}/output temp/output/
 
+cat `ls temp/output/* | xargs`
 ```
 
 ```shell
---- Docker and maven should be installed
 cd ~/environment/emr-serverless-samples/utilities/spark-ui
 export AWS_ACCESS_KEY_ID=AKIAaaaa
 export AWS_SECRET_ACCESS_KEY=bbbb
@@ -143,9 +154,15 @@ export AWS_SESSION_TOKEN=yyyy
 ./start-ui.sh ${S3_BUCKET} ${APPLICATION_ID} ${JOB_RUN_ID}
 
 ```
-## Run your job
+## Run Spark Job with integration with Glue Catalog
 
-- First, make sure the `extreme_weather.py` script is uploaded to an S3 bucket in the `us-east-1 region.
+- Refer to the configuration that is required for Glue Catalog integration
+```scala
+config("hive.metastore.client.factory.class",
+                    "com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory") 
+```
+
+- First, make sure the `copy-data.py` script is uploaded to an S3 bucket in the `us-east-1 region.
 ```shell
 aws s3 cp ~/environment/emr-serverless-samples/examples/pyspark/copy-data.py s3://${S3_BUCKET}/code/pyspark/
 ```
@@ -160,7 +177,7 @@ _ℹ️ Note that with Spark jobs, you must account for Spark overhead and confi
 In this case, we're also configuring Spark logs to be delivered to our S3 bucket.
 
 ```shell
-JJOB_RUN_ID=`aws emr-serverless start-job-run \
+JOB_RUN_ID=`aws emr-serverless start-job-run \
     --application-id ${APPLICATION_ID} \
     --execution-role-arn ${ROLE_ARN} \
     --job-driver '{
@@ -178,47 +195,40 @@ JJOB_RUN_ID=`aws emr-serverless start-job-run \
         }
     }' --query jobRunId --output text`
 
+echo $JOB_RUN_ID
+```
+The job should start within a few seconds since we're making use of pre-initialized capacity.
+```shell
 aws emr-serverless list-job-runs --application-id $APPLICATION_ID
 
-aws emr-serverless get-job-run --application-id $APPLICATION_ID --job-run-id ${JOB_RUN_ID}
+aws emr-serverless get-job-run --application-id $APPLICATION_ID \
+   --job-run-id ${JOB_RUN_ID}
 
 aws emr-serverless get-job-run --application-id $APPLICATION_ID \
    --job-run-id ${JOB_RUN_ID} --query jobRun.state --output text
 
-aws emr-serverless get-job-run --application-id $APPLICATION_ID \
-                 --job-run-id ${JOB_RUN_ID} --query jobRun.state --output text
-
-aws s3 cp --recursive s3://${S3_BUCKET}/logs/applications/${APPLICATION_ID}/jobs/${JOB_RUN_ID}/SPARK_DRIVER/ ${JOB_RUN_ID}
-
-cat ${JOB_RUN_ID}/stdout.gz | gunzip
- 
-cat ${JOB_RUN_ID}/stderr.gz | gunzip 
 ```
+We can also look at our logs while the job is running.
+```shell
+aws s3 ls  --recursive s3://${S3_BUCKET}/logs/applications/$APPLICATION_ID/jobs/$JOB_RUN_ID/
+
+aws s3 cp  s3://${S3_BUCKET}/logs/applications/${APPLICATION_ID}/jobs/${JOB_RUN_ID}/SPARK_DRIVER/stdout.gz - | gunzip
+aws s3 cp  s3://${S3_BUCKET}/logs/applications/${APPLICATION_ID}/jobs/${JOB_RUN_ID}/SPARK_DRIVER/stderr.gz - | gunzip
+
+```
+We can also Spark History Server to monitor job.
 
 ```shell
-cd ../utilities/spark-ui
-chmod +x *.sh
-export AWS_ACCESS_KEY_ID=AKIAaaaa
-export AWS_SECRET_ACCESS_KEY=bbbb
-export AWS_SESSION_TOKEN=yyyy
+cd ~/environment/emr-serverless-samples/utilities/spark-ui
+
 ./start-ui.sh ${S3_BUCKET} ${APPLICATION_ID} ${JOB_RUN_ID}
 ```
 
-
-
-
-The job should start within a few seconds since we're making use of pre-initialized capacity.
-
-We can also look at our logs while the job is running.
-
+View the output of job
 ```shell
-aws s3 ls s3://${S3_BUCKET}/logs/applications/$APPLICATION_ID/jobs/$JOB_RUN_ID/
-```
+aws s3 ls --recursive s3://${S3_BUCKET}/output/noaa_gsod_pds
+aws s3 ls --recursive s3://${S3_BUCKET}/output/noaa_gsod_pds_aggregate
 
-Or copy the stdout of the job.
-
-```shell
-aws s3 cp s3://${S3_BUCKET}/logs/applications/$APPLICfATION_ID/jobs/$JOB_RUN_ID/SPARK_DRIVER/stdout.gz - | gunzip
 ```
 
 ## Clean up
@@ -241,26 +251,21 @@ aws emr-serverless delete-application \
 
 - (Optional) Follow the steps in [building the Spark UI Docker container](/utilities/spark-ui/) to build the container locally
 
-- Get credentials and set LOG_DIR
+- Get credentials 
 
 ```shell
 export AWS_ACCESS_KEY_ID=AKIAaaaa
 export AWS_SECRET_ACCESS_KEY=bbbb
 export AWS_SESSION_TOKEN=yyyy
-
-export LOG_DIR=s3://${S3_BUCKET}/logs/applications/$APPLICATION_ID/jobs/$JOB_RUN_ID/sparklogs/
 ```
 
-- Fire up Docker in the background
+- Start UI
 
 ```shell
-docker run --rm -d \
-    --name emr-serverless-spark-ui \
-    -p 18080:18080 \
-    -e SPARK_HISTORY_OPTS="-Dspark.history.fs.logDirectory=$LOG_DIR -Dspark.hadoop.fs.s3.customAWSCredentialsProvider=com.amazonaws.auth.DefaultAWSCredentialsProviderChain" \
-    -e AWS_REGION=us-east-1 \
-    -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
-    ghcr.io/aws-samples/emr-serverless-spark-ui:latest
+cd ~/environment/emr-serverless-samples/utilities/spark-ui
+
+./start-ui.sh ${S3_BUCKET} ${APPLICATION_ID} ${JOB_RUN_ID}
+
 ```
 
 - Access the Spark UI via http://localhost:18080
@@ -268,5 +273,5 @@ docker run --rm -d \
 - When you're done, stop the Docker image
 
 ```shell
-docker stop emr-serverless-spark-ui
+./stop-ui.sh
 ```
