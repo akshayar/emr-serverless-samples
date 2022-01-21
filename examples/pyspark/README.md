@@ -13,7 +13,12 @@ _You should have already completed the pre-requisites in this repo's [README](/R
 - Define some environment variables to be used later
 
 ```shell
+
 export S3_BUCKET=<YOUR_BUCKET_NAME>
+
+```
+
+```shell
 export ROLE_ARN=`aws iam get-role --role-name emr-serverless-job-role --query Role.Arn --output text`
 echo ${ROLE_ARN}
 ```
@@ -188,7 +193,7 @@ JOB_RUN_ID=`aws emr-serverless start-job-run \
     --execution-role-arn ${ROLE_ARN} \
     --job-driver '{
         "sparkSubmit": {
-            "entryPoint": "s3://'${S3_BUCKET}'/pyspark/copy-data.py",
+            "entryPoint": "s3://'${S3_BUCKET}'/code/pyspark/copy-data.py",
             "entryPointArguments": ["s3://noaa-gsod-pds/2021/","s3://'${S3_BUCKET}'/output/noaa_gsod_pds","default.noaa_gsod_pds"]
             
         }
