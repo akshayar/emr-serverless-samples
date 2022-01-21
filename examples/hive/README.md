@@ -159,20 +159,20 @@ JOB_RUN_ID=`aws emr-serverless start-job-run \
 - We can also look at our logs while the job is running.
 
 ```shell
-aws s3 ls  --recursive s3://${S3_BUCKET}/logs/applications/$APPLICATION_ID/jobs/$JOB_RUN_ID/
+aws s3 ls  --recursive s3://${S3_BUCKET}/hive-logs/applications/$APPLICATION_ID/jobs/$JOB_RUN_ID/
 
-aws s3 cp --recursive s3://${S3_BUCKET}/hive-logs/applications/$APPLICATION_ID/jobs/${JOB_RUN_ID}/HIVE_DRIVER/stdout.gz  - | gunzip
+aws s3 cp s3://${S3_BUCKET}/hive-logs/applications/$APPLICATION_ID/jobs/${JOB_RUN_ID}/HIVE_DRIVER/stdout.gz  - | gunzip
 
-aws s3 cp --recursive s3://${S3_BUCKET}/hive-logs/applications/$APPLICATION_ID/jobs/${JOB_RUN_ID}/HIVE_DRIVER/stderr.gz  - | gunzip
+aws s3 cp s3://${S3_BUCKET}/hive-logs/applications/$APPLICATION_ID/jobs/${JOB_RUN_ID}/HIVE_DRIVER/stderr.gz  - | gunzip
 
 ```
 - We can also Tez UI to monitor job.
 ```shell
-cd ~/environment/emr-serverless-samples/utilities/tez-ui
-
 export AWS_ACCESS_KEY_ID=AKIAaaaa
 export AWS_SECRET_ACCESS_KEY=bbbb
 export AWS_SESSION_TOKEN=yyyy
+
+cd ~/environment/emr-serverless-samples/utilities/tez-ui
 ./start-ui.sh ${S3_BUCKET} ${APPLICATION_ID} ${JOB_RUN_ID}
 ```
 

@@ -157,10 +157,11 @@ cat `ls temp/output/* | xargs`
 ```
 - We can also launch Spark History Server to monitor job.
 ```shell
-cd ~/environment/emr-serverless-samples/utilities/spark-ui
 export AWS_ACCESS_KEY_ID=AKIAaaaa
 export AWS_SECRET_ACCESS_KEY=bbbb
 export AWS_SESSION_TOKEN=yyyy
+
+cd ~/environment/emr-serverless-samples/utilities/spark-ui
 
 ./start-ui.sh ${S3_BUCKET} ${APPLICATION_ID} ${JOB_RUN_ID}
 
