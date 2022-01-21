@@ -55,6 +55,8 @@ aws iam put-role-policy --role-name emr-serverless-job-role --policy-name S3Acce
                 "s3:ListBucket"
             ],
             "Resource": [
+                "arn:aws:s3:::*.elasticmapreduce",
+                "arn:aws:s3:::*.elasticmapreduce/*",
                 "arn:aws:s3:::noaa-gsod-pds",
                 "arn:aws:s3:::noaa-gsod-pds/*",
                 "arn:aws:s3:::'${S3_BUCKET}'",
