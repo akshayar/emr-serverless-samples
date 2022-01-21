@@ -147,7 +147,7 @@ export AWS_SESSION_TOKEN=yyyy
 
 - First, make sure the `extreme_weather.py` script is uploaded to an S3 bucket in the `us-east-1 region.
 ```shell
-aws s3 cp copy-data.py s3://${S3_BUCKET}/code/pyspark/
+aws s3 cp ~/environment/emr-serverless-samples/examples/pyspark/copy-data.py s3://${S3_BUCKET}/code/pyspark/
 ```
 
 
