@@ -14,20 +14,17 @@ _You should have already completed the pre-requisites in this repo's [README](/R
 
 ```shell
 export S3_BUCKET=<YOUR_BUCKET_NAME>
-export JOB_ROLE_ARN=arn:aws:iam::<ACCOUNT_ID>:role/emr-serverless-job-role
+export ROLE_ARN=`aws iam get-role --role-name emr-serverless-job-role --query Role.Arn --output text`
 ```
 
-- First, make sure the `extreme_weather.py` script is uploaded to an S3 bucket in the `us-east-1 region.
-
-```shell
-aws s3 cp extreme_weather.py s3://${S3_BUCKET}/code/pyspark/
-```
 
 - Now, let's create and start an Application on EMR Serverless. Applications are where you submit jobs and are associated with a specific open source framework and release version. For this application, we'll configure [pre-initialized capacity](https://docs.aws.amazon.com/emr/latest/EMR-Serverless-UserGuide/application-capacity-api.html) to ensure this application can begin running jobs immediately.
 
 _ℹ️ Please note that leaving a pre-initialized application running WILL incur costs in your AWS Account._
 
 ```shell
+aws emr-serverless list-applications
+
 aws emr-serverless create-application \
   --type SPARK \
   --name serverless-demo \
@@ -53,6 +50,7 @@ aws emr-serverless create-application \
         "memory": "200GB",
         "disk": "1000GB"
     }'
+
 ```
 
 This will return information about your application. In this case, we've created an application that can handle 2 simultaneous Spark apps with an initial set of 10 executors, each with 4vCPU and 4GB of memory, that can scale up to 200vCPU or 50 executors.
@@ -68,14 +66,19 @@ This will return information about your application. In this case, we've created
 We'll set an `APPLICATION_ID` environment variable to reuse later.
 
 ```shell
-export APPLICATION_ID=00et0dhmhuokmr09
+aws emr-serverless list-applications
+
+export  APPLICATION_ID=`aws emr-serverless list-applications --query applications[0].id --output text`
+
+
+
 ```
 
 - Get the state of your application
 
 ```shell
 aws emr-serverless get-application \
-    --application-id $APPLICATION_ID
+    --application-id ${APPLICATION_ID}
 ```
 
 Once your application is in `CREATED` state, you can go ahead and start it.
@@ -89,7 +92,60 @@ Once your application is in `STARTED` state, you can submit jobs.
 
 With [pre-initialized capacity](https://docs.aws.amazon.com/emr/latest/EMR-Serverless-UserGuide/application-capacity-api.html), you can define a minimum amount of resources that EMR Serverless keeps ready to respond to interactive queries. EMR Serverless will scale your application up as necessary to respond to workloads, but return to the pre-initialized capacity when there is no activity. You can start or stop an application to effectively pause your application so that you are not billed for resources you're not using. If you don't need second-level response times in your workloads, you can use the default capacity and EMR Serverless will decomission all resources when a job is complete and scale back up as more workloads come in.
 
+## Run wordcount Job
+
+```shell
+JOB_RUN_ID=`aws emr-serverless start-job-run \
+    --application-id ${APPLICATION_ID} \
+    --execution-role-arn ${ROLE_ARN} \
+    --job-driver '{
+        "sparkSubmit": {
+            "entryPoint": "s3://us-east-1.elasticmapreduce/emr-containers/samples/wordcount/scripts/wordcount.py",
+            "entryPointArguments": ["s3://'${S3_BUCKET}'/output"],
+            "sparkSubmitParameters": "--conf spark.executor.cores=1 --conf spark.executor.memory=4g --conf spark.driver.cores=1 --conf spark.driver.memory=4g --conf spark.executor.instances=1"
+        }
+    }' \
+    --configuration-overrides '{
+        "monitoringConfiguration": {
+           "s3MonitoringConfiguration": {
+             "logUri": "s3://'${S3_BUCKET}'/logs"
+           }
+        }
+    }' --query jobRunId --output text`
+    
+aws emr-serverless list-job-runs --application-id $APPLICATION_ID
+
+aws emr-serverless get-job-run --application-id $APPLICATION_ID --job-run-id ${JOB_RUN_ID}
+
+aws emr-serverless get-job-run --application-id $APPLICATION_ID --job-run-id ${JOB_RUN_ID} --query jobRun.state --output text
+
+aws s3 cp --recursive s3://${S3_BUCKET}/logs/applications/${APPLICATION_ID}/jobs/${JOB_RUN_ID}/SPARK_DRIVER/ ${JOB_RUN_ID}
+
+cat ${JOB_RUN_ID}/stdout.gz | gunzip
+ 
+cat ${JOB_RUN_ID}/stderr.gz | gunzip 
+
+```
+
+```shell
+--- Docker and maven should be installed
+cd ../utilities/spark-ui
+chmod +x *.sh
+./build.sh 
+export AWS_ACCESS_KEY_ID=AKIAaaaa
+export AWS_SECRET_ACCESS_KEY=bbbb
+export AWS_SESSION_TOKEN=yyyy
+
+./start-ui.sh ${S3_BUCKET} ${APPLICATION_ID} ${JOB_RUN_ID}
+
+```
 ## Run your job
+
+- First, make sure the `extreme_weather.py` script is uploaded to an S3 bucket in the `us-east-1 region.
+```shell
+aws s3 cp copy-data.py s3://${S3_BUCKET}/code/pyspark/
+```
+
 
 Now that you've created your application, you can submit jobs to it at any time.
 
@@ -100,43 +156,52 @@ _ℹ️ Note that with Spark jobs, you must account for Spark overhead and confi
 In this case, we're also configuring Spark logs to be delivered to our S3 bucket.
 
 ```shell
-aws emr-serverless start-job-run \
-    --application-id $APPLICATION_ID \
-    --execution-role-arn $JOB_ROLE_ARN \
+JJOB_RUN_ID=`aws emr-serverless start-job-run \
+    --application-id ${APPLICATION_ID} \
+    --execution-role-arn ${ROLE_ARN} \
     --job-driver '{
         "sparkSubmit": {
-            "entryPoint": "s3://'${S3_BUCKET}'/code/pyspark/extreme_weather.py",
-            "sparkSubmitParameters": "--conf spark.driver.cores=1 --conf spark.driver.memory=3g --conf spark.executor.cores=4 --conf spark.executor.memory=3g --conf spark.executor.instances=10"
+            "entryPoint": "s3://'${S3_BUCKET}'/pyspark/copy-data.py",
+            "entryPointArguments": ["s3://noaa-gsod-pds/2021/","s3://'${S3_BUCKET}'/output/noaa_gsod_pds","default.noaa_gsod_pds"]
+            
         }
     }' \
     --configuration-overrides '{
         "monitoringConfiguration": {
-            "s3MonitoringConfiguration": {
-                "logUri": "s3://'${S3_BUCKET}'/logs/"
-            }
+           "s3MonitoringConfiguration": {
+             "logUri": "s3://'${S3_BUCKET}'/logs"
+           }
         }
-    }'
-```
+    }' --query jobRunId --output text`
 
-```json
-{
-    "applicationId": "00esprurjpeqpq09",
-    "arn": "arn:aws:emr-serverless:us-east-1:123456789012:/applications/00esprurjpeqpq09/jobruns/00esps8ka2vcu801",
-    "jobRunId": "00esps8ka2vcu801"
-}
-```
+aws emr-serverless list-job-runs --application-id $APPLICATION_ID
 
-Let's set our `JOB_RUN_ID` variable so we can use it to monitor the job progress.
+aws emr-serverless get-job-run --application-id $APPLICATION_ID --job-run-id ${JOB_RUN_ID}
+
+aws emr-serverless get-job-run --application-id $APPLICATION_ID \
+   --job-run-id ${JOB_RUN_ID} --query jobRun.state --output text
+
+aws emr-serverless get-job-run --application-id $APPLICATION_ID \
+                 --job-run-id ${JOB_RUN_ID} --query jobRun.state --output text
+
+aws s3 cp --recursive s3://${S3_BUCKET}/logs/applications/${APPLICATION_ID}/jobs/${JOB_RUN_ID}/SPARK_DRIVER/ ${JOB_RUN_ID}
+
+cat ${JOB_RUN_ID}/stdout.gz | gunzip
+ 
+cat ${JOB_RUN_ID}/stderr.gz | gunzip 
+```
 
 ```shell
-export JOB_RUN_ID=00esps8ka2vcu801
+cd ../utilities/spark-ui
+chmod +x *.sh
+export AWS_ACCESS_KEY_ID=AKIAaaaa
+export AWS_SECRET_ACCESS_KEY=bbbb
+export AWS_SESSION_TOKEN=yyyy
+./start-ui.sh ${S3_BUCKET} ${APPLICATION_ID} ${JOB_RUN_ID}
 ```
 
-```shell
-aws emr-serverless get-job-run \
-    --application-id $APPLICATION_ID \
-    --job-run-id $JOB_RUN_ID
-```
+
+
 
 The job should start within a few seconds since we're making use of pre-initialized capacity.
 

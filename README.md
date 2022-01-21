@@ -15,7 +15,8 @@ _These demos assume you are using an Administrator-level role in your AWS accoun
 2. Create an Amazon S3 bucket in the us-east-1 region
 
 ```shell
-aws s3 mb s3://BUCKET-NAME --region us-east-1
+export S3_BUCKET=<>
+aws s3 mb s3://${S3_BUCKET} --region us-east-1
 ```
 
 3. Create an EMR Serverless execution role (replacing `BUCKET-NAME` with the one you created above)
@@ -49,8 +50,8 @@ aws iam put-role-policy --role-name emr-serverless-job-role --policy-name S3Acce
             "Resource": [
                 "arn:aws:s3:::noaa-gsod-pds",
                 "arn:aws:s3:::noaa-gsod-pds/*",
-                "arn:aws:s3:::BUCKET-NAME",
-                "arn:aws:s3:::BUCKET-NAME/*"
+                "arn:aws:s3:::'${S3_BUCKET}'",
+                "arn:aws:s3:::'${S3_BUCKET}'/*"
             ]
         },
         {
@@ -61,7 +62,7 @@ aws iam put-role-policy --role-name emr-serverless-job-role --policy-name S3Acce
                 "s3:DeleteObject"
             ],
             "Resource": [
-                "arn:aws:s3:::BUCKET-NAME/*"
+                "arn:aws:s3:::'${S3_BUCKET}'/*"
             ]
         }
     ]
@@ -74,16 +75,21 @@ aws iam put-role-policy --role-name emr-serverless-job-role --policy-name GlueAc
         "Sid": "GlueCreateAndReadDataCatalog",
         "Effect": "Allow",
         "Action": [
+            "glue:CreateDatabase",
             "glue:GetDatabase",
             "glue:GetDataBases",
             "glue:CreateTable",
             "glue:GetTable",
             "glue:GetTables",
+            "glue:DeleteTable",
+            "glue:UpdateTable",
             "glue:GetPartition",
             "glue:GetPartitions",
             "glue:CreatePartition",
+            "glue:DeletePartition",
             "glue:BatchCreatePartition",
-            "glue:GetUserDefinedFunctions"
+            "glue:GetUserDefinedFunctions",
+            "glue:BatchDeletePartition"
         ],
         "Resource": ["*"]
       }

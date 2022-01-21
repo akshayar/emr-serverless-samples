@@ -16,7 +16,7 @@ _You should have already completed the pre-requisites in this repo's [README](/R
 
 ```shell
 export S3_BUCKET=<YOUR_BUCKET_NAME>
-export JOB_ROLE_ARN=arn:aws:iam::<ACCOUNT_ID>:role/emr-serverless-job-role
+export ROLE_ARN=`aws iam get-role --role-name emr-serverless-job-role --query Role.Arn --output text`
 ```
 
 - First, make sure the `extreme_weather.sql` and `create_table.sql` scripts are uploaded to an S3 bucket in the `us-east-1` region.
@@ -73,7 +73,11 @@ This will return information about your application.
 We'll set an `APPLICATION_ID` environment variable to reuse later.
 
 ```shell
-export APPLICATION_ID=00et0f0b79s06o09
+aws emr-serverless list-applications
+
+export  APPLICATION_ID=`aws emr-serverless list-applications --query applications[0].id --output text`
+
+--export APPLICATION_ID=00et0f0b79s06o09
 ```
 
 - Get the state of your application
@@ -100,9 +104,9 @@ With [pre-initialized capacity](https://docs.aws.amazon.com/emr/latest/EMR-Serve
 Now that you've created your application, you can submit jobs to it at any time.
 
 ```shell
-aws emr-serverless start-job-run \
-    --application-id $APPLICATION_ID \
-    --execution-role-arn $JOB_ROLE_ARN \
+JOB_RUN_ID=`aws emr-serverless start-job-run \
+    --application-id ${APPLICATION_ID} \
+    --execution-role-arn ${ROLE_ARN} \
     --job-driver '{
         "hive": {
             "initQueryFile": "s3://'${S3_BUCKET}'/code/hive/create_table.sql",
@@ -127,28 +131,30 @@ aws emr-serverless start-job-run \
                 "logUri": "s3://'${S3_BUCKET}'/hive-logs/"
             }
         }
-    }'
-```
+    }' --query jobRunId --output text`
+    
+ aws emr-serverless list-job-runs --application-id $APPLICATION_ID
+ 
+ aws emr-serverless get-job-run --application-id $APPLICATION_ID --job-run-id ${JOB_RUN_ID}
 
-```json
-{
-    "applicationId": "00esprurjpeqpq09",
-    "arn": "arn:aws:emr-serverless:us-east-1:123456789012:/applications/00esprurjpeqpq09/jobruns/00esps8ka2vcu801",
-    "jobRunId": "00esps8ka2vcu801"
-}
-```
+ aws emr-serverless get-job-run --application-id $APPLICATION_ID --job-run-id ${JOB_RUN_ID} --query jobRun.state --output text
+ 
+ 
+ aws s3 cp --recursive s3://akshaya-emr-workshop/hive-logs/applications/$APPLICATION_ID/jobs/${JOB_RUN_ID}/HIVE_DRIVER/ ${JOB_RUN_ID}
 
-Let's set our `JOB_RUN_ID` variable so we can use it to monitor the job progress.
-
-```shell
-export JOB_RUN_ID=00esps8ka2vcu801
+ cat ${JOB_RUN_ID}/hive.log.gz | gunzip
+ cat ${JOB_RUN_ID}/stderr.gz | gunzip
 ```
 
 ```shell
-aws emr-serverless get-job-run \
-    --application-id $APPLICATION_ID \
-    --job-run-id $JOB_RUN_ID
+cd ../utilities/tez-ui
+chmod +x *.sh
+export AWS_ACCESS_KEY_ID=AKIAaaaa
+export AWS_SECRET_ACCESS_KEY=bbbb
+export AWS_SESSION_TOKEN=yyyy
+./start-ui.sh ${S3_BUCKET} ${APPLICATION_ID} ${JOB_RUN_ID}
 ```
+
 
 The job should start within a few seconds since we're making use of pre-initialized capacity.
 
