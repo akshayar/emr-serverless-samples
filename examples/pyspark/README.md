@@ -71,7 +71,7 @@ aws emr-serverless list-applications
 
 export  APPLICATION_ID=`aws emr-serverless list-applications --query applications[0].id --output text`
 
-
+echo $APPLICATION_ID
 
 ```
 
