@@ -156,7 +156,7 @@ aws s3 cp --recursive s3://${S3_BUCKET}/output temp/output/
 
 cat `ls temp/output/* | xargs`
 ```
-- We can also launch Spark History Server to monitor job.
+- We can also launch Spark History Server to monitor job. Refer [Spark UI](/utilities/spark-ui/).
 ```shell
 export AWS_ACCESS_KEY_ID=AKIAaaaa
 export AWS_SECRET_ACCESS_KEY=bbbb
@@ -229,7 +229,7 @@ aws s3 cp  s3://${S3_BUCKET}/logs/applications/${APPLICATION_ID}/jobs/${JOB_RUN_
 aws s3 cp  s3://${S3_BUCKET}/logs/applications/${APPLICATION_ID}/jobs/${JOB_RUN_ID}/SPARK_DRIVER/stderr.gz - | gunzip
 
 ```
-- We can also launch Spark History Server to monitor job.
+- We can also launch Spark History Server to monitor job. Refer [Spark UI](/utilities/spark-ui/).
 
 ```shell
 cd $SOURCE_ROOT/utilities/spark-ui
