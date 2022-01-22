@@ -19,6 +19,7 @@ aws configure add-model --service-model file://service.json
 
 aws configure set region us-east-1
 aws emr-serverless list-applications
+aws emr-serverless help 
 ```
 
 3. Create an Amazon S3 bucket in the us-east-1 region
