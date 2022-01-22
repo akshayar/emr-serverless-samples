@@ -10,11 +10,12 @@ _ℹ️ Throughout this demo, I utilize environment variables to allow for easy 
 
 _You should have already completed the pre-requisites in this repo's [README](/README.md)._
 
-- Define some environment variables to be used later
+- Define some environment variables to be used later. 
 
 ```shell
-
-export S3_BUCKET=<YOUR_BUCKET_NAME>
+git clone https://github.com/akshayar/emr-serverless-samples.git
+cd emr-serverless-samples
+export SOURCE_ROOT=`pwd`
 
 ```
 
