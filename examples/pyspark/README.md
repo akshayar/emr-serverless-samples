@@ -198,7 +198,7 @@ JOB_RUN_ID=`aws emr-serverless start-job-run \
     --job-driver '{
         "sparkSubmit": {
             "entryPoint": "s3://'${S3_BUCKET}'/code/pyspark/copy-data.py",
-            "entryPointArguments": ["s3://noaa-gsod-pds/2021/","s3://'${S3_BUCKET}'/output/noaa_gsod_pds","emrserverless.noaa_gsod_pds"]
+            "entryPointArguments": ["s3://noaa-gsod-pds/2021/","s3://'${S3_BUCKET}'/output2/noaa_gsod_pds","emrserverless.noaa_gsod_pds"]
             
         }
     }' \
