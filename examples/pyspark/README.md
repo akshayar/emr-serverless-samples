@@ -96,6 +96,8 @@ aws emr-serverless get-application     --application-id $APPLICATION_ID --query 
 aws emr-serverless start-application \
     --application-id $APPLICATION_ID
     
+date "+TIME: %H:%M:%S" 
+
 aws emr-serverless get-application     --application-id $APPLICATION_ID --query application.state --output text
 ```
 
